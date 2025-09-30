@@ -1,10 +1,13 @@
 "use client"
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { Axios } from "axios";
+import axios, { Axios } from "axios";
+import toast from "react-hot-toast";
 
 export default function SignUpPage () {
+
+    const router = useRouter();
 
     const [user,setUser] = useState({
         email:"",
@@ -12,12 +15,35 @@ export default function SignUpPage () {
         username:""   
     })
 
+    const [buttonDisabled,setButtonDisabled] = useState(false);
+
+    const [loading , setLoading] = useState(false);
+
+    useEffect(() => {
+        if(user.email.length > 0 && user.password.length > 0 && user.username.length > 0){
+            setButtonDisabled(false);
+        } else {
+            setButtonDisabled(true);
+        }
+    },[user])
+
     const onSignup = async () => {
-        
+        try {
+            setLoading(true);
+            const response = await axios.post("api/users/signup", user);
+            console.log("signup success" , response.data);
+            router.push("/login");
+        } catch (error:any) {
+            console.log("signup failed" , error.message);
+
+            toast.error(error.message)
+        } finally {
+            setLoading(false);
+        }       
     }
     return (
        <div className="flex flex-col items-center justify-center min-h-screen py-2 ">
-            signup
+            {loading ? "Processing" : "SignUp" }
             <div>
                 <label htmlFor="username">UserName: </label>
             <input className="p-2 bg-amber-50 text-black rounded-2xl my-4 "
@@ -51,7 +77,7 @@ export default function SignUpPage () {
              <button
               
               onClick={onSignup} 
-              className="p-2 bg-green-600 rounded-xl w-[100px] hover:bg-orange-800">SignUp</button>
+              className="p-2 bg-green-600 rounded-xl w-[100px] hover:bg-orange-800">{buttonDisabled ? "No SignUp" : "SignUp"}</button>
 
               <Link className="m-4 hover:text-green-700" href="/login">visit login page</Link>
         </div>
